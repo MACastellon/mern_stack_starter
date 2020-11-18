@@ -5,9 +5,9 @@ This is a very basic MERN (MongoDB, Express.js, React.js, Node.js) stack starter
 I wanted to create a basic starter template to speed up my developement of a full stack application using the MERN stack.
 ## Table of content
 - [Includes](#includes)
-- [Server dependencies:](#server-dependencies)
-- [Client dependencies:](#client-dependencies)
-- [To Do:](#to-do)
+- [Server dependencies](#server-dependencies)
+- [Client dependencies](#client-dependencies)
+- [To Do](#to-do)
 
 ## Includes:
 - Users features : register , login , email verification.
