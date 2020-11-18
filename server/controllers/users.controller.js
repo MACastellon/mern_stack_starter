@@ -2,18 +2,19 @@ import User from "../models/user.model.js";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv'
-import sendGrid from '@sendgrid/mail';
 import nodemailer from 'nodemailer';
+
+dotenv.config();
 
 const transporter = nodemailer.createTransport({
     service : 'gmail',
     auth : {
-        user : '',
-        pass : ''
+        user : `${process.env.USER_EMAIL}`,
+        pass : `${process.env.USER_PASSWORD}`
     }
 })
 
-dotenv.config();
+
 
 /*
 * Basic function section
@@ -46,7 +47,7 @@ export const userRegister = async (req,res) => {
     //Verify is the email has already been taken
     const user = await  User.findOne({email});
 
-    if (user) return res.status(409).json({message: "This email has already been taken"});
+    if (user) return res.json({message: "This email has already been taken", success : false});
 
     //hash the password
     const hashedPassword =  await bcrypt.hash(password, 10);
@@ -116,7 +117,9 @@ export const userLogin = async (req,res) => {
 
     //Compare password
     const isMatch = await bcrypt.compare(password, user.password)
+
     if (isMatch) {
+        console.log(isMatch);
         // Make object of user data without the password
         const userData = {
             _id: user._id,
@@ -142,4 +145,57 @@ export const verifyToken = async (req,res) => {
 
         return res.json({success : true});
     });
+}
+
+export const forgotPassword = async (req,res) => {
+    const email = req.body.email;
+
+    // Find the user
+    const user = await User.findOne({email : email});
+
+    if (!user) return res.json({message: `This account doesn't exist`, success : false});
+
+    const hashedToken =  await bcrypt.hash(`${user._id}`,10)
+    const token = await jwt.sign({reset_token : hashedToken},process.env.ACCESS_TOKEN_SECRET,{expiresIn : '1h'});
+    console.log(hashedToken);
+
+   await User.updateOne({email}, {$set : {reset_token : hashedToken}})
+
+    const msg = {
+        to : user.email,
+        from : 'macastellon101@gmail.com',
+        subject : 'Reset your forgotten password now',
+        html : `<h1>This mail contain the link to reset your forgotten password</h1>
+                <a href="http://localhost:3000/forgot_password/${token}">Click Here<a>
+                `
+    }
+
+    transporter.sendMail(msg,(err, res)  => {
+        if (err) console.log(err)
+        console.log(res)
+    })
+
+    return res.json({message : 'Check your email to reset your password', success : true});
+}
+
+export const forgotPasswordReset = async (req,res) => {
+
+    const token = req.params.token
+
+    try {
+        const decodedToken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET);
+        const reset_token = await decodedToken.reset_token;
+        const user = await User.findOne({reset_token : reset_token});
+        const tokenCompare = user._id;
+
+        const isValidToken = await bcrypt.compare(`${tokenCompare}`, user.reset_token);
+
+        if (isValidToken) {
+            return res.json({success : true});
+        }
+    }catch (e) {
+        if (e.expiredAt) return res.json({message : 'You took too long to reset your password', success: false})
+        if (e.message) return res.json({message : 'Something went wrong', success : false})
+    }
+
 }

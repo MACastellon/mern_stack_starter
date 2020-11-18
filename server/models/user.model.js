@@ -32,6 +32,11 @@ const userSchema = new Schema ({
     isVerified : {
         type : Boolean,
         required : true
+    },
+    reset_token : {
+        type : String,
+        required : false,
+        default : ''
     }
 
 

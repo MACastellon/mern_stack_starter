@@ -1,5 +1,5 @@
 import express from 'express';
-import {userRegister,userConfirmation,userLogin, verifyToken} from "../controllers/users.controller.js";
+import {userRegister,userConfirmation,userLogin, verifyToken,forgotPassword, forgotPasswordReset} from "../controllers/users.controller.js";
 
 const router = express.Router();
 router.get("/", function(req,res) {
@@ -13,5 +13,9 @@ router.post('/confirmation/:token', userConfirmation);
 router.post('/login', userLogin);
 //Verify Token route
 router.post('/verify', verifyToken);
+//Forgot Password route
+router.post('/forgot_password', forgotPassword);
+// Forgot Password Reset route
+router.post('/forgot_password/:token', forgotPasswordReset);
 
 export default router;
