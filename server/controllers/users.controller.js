@@ -134,7 +134,7 @@ export const userLogin = async (req,res) => {
 
 export const verifyToken = async (req,res) => {
     const token = req.body.token;
-    
+
     //Verify if the token is valid
     jwt.verify(token,process.env.ACCESS_TOKEN_SECRET, (err,verifiedToken) => {
         if (err) return res.json({success : false})
