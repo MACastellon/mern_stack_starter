@@ -10,7 +10,7 @@ I wanted to create a basic starter template to speed up my developement of a ful
 - [To Do](#to-do)
 
 ## Includes:
-- Users features : register , login , email verification.
+- Users features : register , login , email verification, forgot password.
 - Private route and Redirected route system on the front end.
 - Global State for User using the Context API
 
@@ -29,7 +29,7 @@ I wanted to create a basic starter template to speed up my developement of a ful
 - axios
 
 ## To do:
-- Password reset
-- forgot password mechanism
+- Password reset when user is connected
+
 
 
