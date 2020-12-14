@@ -37,6 +37,11 @@ const userSchema = new Schema ({
         type : String,
         required : false,
         default : ''
+    },
+    info_changed : {
+        type : Date,
+        required : true,
+        default: Date.now()
     }
 
 

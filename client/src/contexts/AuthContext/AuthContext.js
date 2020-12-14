@@ -1,13 +1,16 @@
 import React, {useState, createContext ,useEffect} from 'react';
 import jwtDecode from "jwt-decode";
 import axios from 'axios';
+import {useHistory} from "react-router-dom";
 
 export const AuthContext = createContext();
 
 export const  AuthProvider = ({children}) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [token , setToken] = useState(null);
 
+    const history = useHistory();
     useEffect(async ()  => {
 
         if (!localStorage.getItem("token")) {
@@ -31,11 +34,12 @@ export const  AuthProvider = ({children}) => {
 
             if (isValidToken) {
                 const decodedToken = await jwtDecode(token);
+                console.log(decodedToken);
                 setUser(decodedToken);
                 setLoading(false);
             } else {
-                setUser(null);
-                localStorage.removeItem('token');
+                logout();
+                setLoading(false)
             }
         } catch (e) {
             localStorage.removeItem('token');
@@ -47,15 +51,17 @@ export const  AuthProvider = ({children}) => {
 
         const decodedToken = await jwtDecode(token);
         await setUser(decodedToken);
+        await setToken(token);
         localStorage.setItem("token",JSON.stringify(token));
 
     }
+
     const logout = () => {
         setUser(null)
         localStorage.removeItem('token');
     }
 
-    const value = {user , loading ,login, logout};
+    const value = {user,token , loading ,login, logout};
 
     return(
         <AuthContext.Provider value={value}>

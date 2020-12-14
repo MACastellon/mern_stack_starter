@@ -1,10 +1,8 @@
 import express from 'express';
-import {userRegister,userConfirmation,userLogin, verifyToken,forgotPassword, forgotPasswordReset} from "../controllers/users.controller.js";
+import {userRegister,userConfirmation,userLogin, verifyToken,forgotPassword, forgotPasswordVerify, forgotPasswordReset} from "../controllers/users.controller.js";
 
 const router = express.Router();
-router.get("/", function(req,res) {
-    return res.json("alloo")
-})
+
 //Register route
 router.post('/register', userRegister);
 //Email confirmation route
@@ -15,7 +13,12 @@ router.post('/login', userLogin);
 router.post('/verify', verifyToken);
 //Forgot Password route
 router.post('/forgot_password', forgotPassword);
-// Forgot Password Reset route
-router.post('/forgot_password/:token', forgotPasswordReset);
+
+
+// Forgot Password Reset  route
+router.post('/forgot_password/reset', forgotPasswordReset);
+// Forgot Password Verify Token route
+router.post('/forgot_password/:token', forgotPasswordVerify);
+
 
 export default router;

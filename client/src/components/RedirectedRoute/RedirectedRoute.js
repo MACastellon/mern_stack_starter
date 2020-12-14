@@ -4,10 +4,11 @@ import {AuthContext} from "../../contexts/AuthContext/AuthContext";
 
 const RedirectedRoute = ({path,component}) => {
     const {user} = useContext(AuthContext);
+
     return (
         <>
             {!user ? (
-                <Route exact path={path} component={component}/>
+                    <Route exact path={path} component={component}/>
                 ) : (
                     <Redirect to={'/'}/>
                 )}

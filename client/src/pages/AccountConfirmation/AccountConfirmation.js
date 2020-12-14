@@ -7,14 +7,13 @@ const AccountConfirmation = (props) => {
 
     useEffect(() => {
         axios.post(ACCOUNT_CONFIRMATION_URL)
-            .then(res => console.log(res))
+            .then(res => console.log(res.data))
             .catch(e => console.log(e));
     },[])
 
     return (
         <>
           <h3>Confirmation page</h3>
-            {console.log(token)}
         </>
     )
 }

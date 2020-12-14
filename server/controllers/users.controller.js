@@ -28,6 +28,31 @@ const verifyEmail = (email) => {
     return false;
 }
 
+// Generate and return a random token
+const randomToken = () => {
+    return (Math.random() * 10) + Date.now() + (Math.random() * 10);
+}
+
+const verifyForgotPasswordToken = async (token) => {
+    try {
+        const decodedToken =  await jwt.verify(token,process.env.ACCESS_TOKEN_SECRET);
+        const email = decodedToken.email;
+        const user = await User.findOne({email : email});
+
+        const isValidToken = await bcrypt.compare(`${user._id}`, user.reset_token);
+
+        if (isValidToken) {
+            return true;
+        } else {
+            return {success : false};
+        }
+    }catch (e) {
+        if (e.expiredAt) return {message : 'You took too long to reset your password', success: false, expired : true}
+        if (e.message) return {message : 'Something went wrongsss', success : false}
+    }
+
+}
+
 
 /*
 * Routes functions
@@ -66,12 +91,12 @@ export const userRegister = async (req,res) => {
     // Send email ...
     const token = await jwt.sign({id : newUser._id},process.env.ACCESS_TOKEN_SECRET);
     const msg = {
-        to : 'marco911@live.ca',
+        to : `${email}`,
         from : 'macastellon101@gmail.com',
         subject : 'Please confirm your email',
         html : `<h1>Welcome to ...</h1>
                 <p>click the link below to activate your account and start using the app</p>
-                <a href="http://localhost:5000/users/confirmation/${token}">Click Here<a>
+                <a href="http://localhost:3000/users/verify/${token}">Click Here<a>
                 `
     }
 
@@ -102,6 +127,7 @@ export const userLogin = async (req,res) => {
 
     const email = req.body.email;
     const password = req.body.password;
+
     let err = [];
 
     // Verify if the field are empty
@@ -119,12 +145,12 @@ export const userLogin = async (req,res) => {
     const isMatch = await bcrypt.compare(password, user.password)
 
     if (isMatch) {
-        console.log(isMatch);
         // Make object of user data without the password
         const userData = {
             _id: user._id,
             firstName: user.firstName,
-            lastName: user.lastName
+            lastName: user.lastName,
+            info_changed : user.info_changed
         }
 
         //Create and send the JWT
@@ -139,9 +165,13 @@ export const verifyToken = async (req,res) => {
     const token = req.body.token;
 
     //Verify if the token is valid
-    jwt.verify(token,process.env.ACCESS_TOKEN_SECRET, (err,verifiedToken) => {
+    jwt.verify(token,process.env.ACCESS_TOKEN_SECRET, async (err,verifiedToken) => {
         if (err) return res.json({success : false})
         if (!verifiedToken) return res.json({success : false});
+
+        const user = await User.findOne({_id : verifiedToken._id});
+
+        if (user.info_changed.getTime() !== new Date(`${verifiedToken.info_changed}`).getTime()) return res.json({success : false});
 
         return res.json({success : true});
     });
@@ -152,12 +182,9 @@ export const forgotPassword = async (req,res) => {
 
     // Find the user
     const user = await User.findOne({email : email});
-
     if (!user) return res.json({message: `This account doesn't exist`, success : false});
-
     const hashedToken =  await bcrypt.hash(`${user._id}`,10)
-    const token = await jwt.sign({reset_token : hashedToken},process.env.ACCESS_TOKEN_SECRET,{expiresIn : '1h'});
-    console.log(hashedToken);
+    const emailToken = await jwt.sign({reset_token : hashedToken , email : user.email},process.env.ACCESS_TOKEN_SECRET,{expiresIn : '1h'});
 
    await User.updateOne({email}, {$set : {reset_token : hashedToken}})
 
@@ -166,36 +193,59 @@ export const forgotPassword = async (req,res) => {
         from : 'macastellon101@gmail.com',
         subject : 'Reset your forgotten password now',
         html : `<h1>This mail contain the link to reset your forgotten password</h1>
-                <a href="http://localhost:3000/forgot_password/${token}">Click Here<a>
+                <a href="http://localhost:3000/users/forgot_password/reset/${emailToken}">Click Here<a>
                 `
     }
 
     transporter.sendMail(msg,(err, res)  => {
         if (err) console.log(err)
-        console.log(res)
     })
 
     return res.json({message : 'Check your email to reset your password', success : true});
 }
 
-export const forgotPasswordReset = async (req,res) => {
+export const forgotPasswordVerify = async (req,res) => {
 
     const token = req.params.token
 
     try {
-        const decodedToken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET);
+        const decodedToken =  await jwt.verify(token,process.env.ACCESS_TOKEN_SECRET);
+        console.log(decodedToken)
         const reset_token = await decodedToken.reset_token;
-        const user = await User.findOne({reset_token : reset_token});
-        const tokenCompare = user._id;
+        const email = decodedToken.email;
+        const user = await User.findOne({email : email});
 
-        const isValidToken = await bcrypt.compare(`${tokenCompare}`, user.reset_token);
+        const isValidToken = await bcrypt.compare(`${user._id}`, user.reset_token);
 
         if (isValidToken) {
             return res.json({success : true});
+        } else {
+            return res.json({success : false})
         }
     }catch (e) {
-        if (e.expiredAt) return res.json({message : 'You took too long to reset your password', success: false})
+        if (e.expiredAt) return res.json({message : 'You took too long to reset your password', success: false, expired : true})
         if (e.message) return res.json({message : 'Something went wrong', success : false})
     }
 
+}
+
+export const forgotPasswordReset = async (req,res) => {
+    const email = req.body.email;
+    const password = req.body.password;
+    const password2 = req.body.password2;
+    const token = req.body.token;
+
+    if( password !== password2) return res.json({message : "Passwords must be identical", success: false})
+
+    const isValidToken =  await verifyForgotPasswordToken(token)
+
+    if (isValidToken.expired) return res.json(isValidToken);
+    if(isValidToken.message) return res.json(isValidToken);
+
+    const hashedPassword =  await bcrypt.hash(password, 10);
+    // Set the new user's password
+    await User.updateOne({email}, {$set : {password : hashedPassword, reset_token : null, info_changed: new Date()}})
+    
+
+    return  res.json({success : true})
 }
