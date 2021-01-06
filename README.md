@@ -29,7 +29,7 @@ I wanted to create a basic starter template to speed up my developement of a ful
 - axios
 
 ## To do:
-- Password reset when user is connected
+- Clean up and simplify the code
 
 
 
