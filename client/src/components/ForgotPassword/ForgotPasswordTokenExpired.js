@@ -2,10 +2,9 @@ import React from 'react';
 import axios from 'axios';
 
 const ForgotPasswordTokenExpired = (props) => {
-    const email = props.email;
     return (
         <>
-            <h1>Your token has expired ... {email} </h1>
+            <h1>Your token has expired ... </h1>
             <button>Forgot password</button>
         </>
     )

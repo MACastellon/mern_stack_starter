@@ -28,10 +28,6 @@ const verifyEmail = (email) => {
     return false;
 }
 
-// Generate and return a random token
-const randomToken = () => {
-    return (Math.random() * 10) + Date.now() + (Math.random() * 10);
-}
 
 const verifyForgotPasswordToken = async (token) => {
     try {
@@ -51,6 +47,11 @@ const verifyForgotPasswordToken = async (token) => {
         if (e.message) return {message : 'Something went wrongsss', success : false}
     }
 
+}
+
+const extractToken = (data) => {
+    const tokenArray = data.split(" ");
+    return tokenArray[1];
 }
 
 
@@ -129,7 +130,7 @@ export const userLogin = async (req,res) => {
     const password = req.body.password;
 
     let err = [];
-
+    console.log(req.headers);
     // Verify if the field are empty
     if (email === "") err.push({message : "the email field is empty"});
     if (password === "") err.push({message : "The password field is empty"});
@@ -162,15 +163,15 @@ export const userLogin = async (req,res) => {
 }
 
 export const verifyToken = async (req,res) => {
-    const token = req.body.token;
-
+    const token = extractToken(req.headers.authorization);
     //Verify if the token is valid
     jwt.verify(token,process.env.ACCESS_TOKEN_SECRET, async (err,verifiedToken) => {
-        if (err) return res.json({success : false})
+        if (err) return res.json({err ,success : false})
         if (!verifiedToken) return res.json({success : false});
 
         const user = await User.findOne({_id : verifiedToken._id});
 
+        // Verify if any change happend since the last token creation;
         if (user.info_changed.getTime() !== new Date(`${verifiedToken.info_changed}`).getTime()) return res.json({success : false});
 
         return res.json({success : true});
@@ -248,4 +249,24 @@ export const forgotPasswordReset = async (req,res) => {
     
 
     return  res.json({success : true})
+}
+export const resetPassword = async (req,res) => {
+
+    const _id = req.body._id;
+    const currentPassword = req.body.currentPassword;
+    const newPassword = req.body.newPassword;
+    const newPassword2 = req.body.newPassword2;
+    const user = await User.findOne({_id : _id});
+    // Error Verification.
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) return res.json({message : "Your current password is invalid", success: false});
+    if (currentPassword === newPassword) return res.json({message : 'You cannot use the current password as your new password.' ,success : false})
+    if (newPassword !== newPassword2) return res.json({message: "Your new password doesn't match...", success : false});
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    await User.updateOne({_id : _id}, {$set : {password : hashedNewPassword, info_changed : Date.now()}})
+
+    return res.json({success : true});
 }

@@ -17,7 +17,7 @@ const ForgotPasswordReset = (props) => {
 
 
     useEffect(() => {
-        axios.post(FORGOT_PASSWORD_TOKEN_URL)
+        axios.put(FORGOT_PASSWORD_TOKEN_URL)
             .then((res) => {
                 const success = res.data.success;
                 const expired = res.data.expired;

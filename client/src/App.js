@@ -11,22 +11,29 @@ import {AuthContext} from "./contexts/AuthContext/AuthContext";
 import NotFound from "./pages/NotFound/NotFound";
 import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 import ForgotPasswordReset from "./pages/ForgotPassword/ForgotPasswordReset/ForgotPasswordReset";
+import ResetPassword from "./pages/ResetPassword/ResetPassword";
+import Header from "./components/Header/Header";
 
 const App = () => {
     const {loading} = useContext(AuthContext);
     return (
         <>
             {!loading ? (
-                <Switch>
-                    <RedirectedRoute path={'/register'} component={Register}/>
-                    <RedirectedRoute path={'/login'} component={Login}/>
-                    <Route exact path={'/users/verify/:token'} component={AccountConfirmation}/>
-                    <Route exact path={'/users/forgot_password/reset/:token'} component={ForgotPasswordReset}/>
-                    <Route exact path={'/users/forgot_password/'} component={ForgotPassword}/>
-                    <PrivateRoute exact path={'/authpagetest'} component={AuthPageTest}/>
-                    <Route exact path={'/'} component={Home}/>
-                    <Route component={NotFound}/>
-                </Switch>
+                <>
+                    <Header/>
+                    <Switch>
+                        <RedirectedRoute path={'/register'} component={Register}/>
+                        <RedirectedRoute path={'/login'} component={Login}/>
+                        <Route exact path={'/users/verify/:token'} component={AccountConfirmation}/>
+                        <Route exact path={'/users/forgot_password/reset/:token'} component={ForgotPasswordReset}/>
+                        <Route exact path={'/users/forgot_password/'} component={ForgotPassword}/>
+                        <PrivateRoute exact path={'/users/reset_password'} component={ResetPassword}/>
+                        <PrivateRoute exact path={'/authpagetest'} component={AuthPageTest}/>
+                        <Route exact path={'/'} component={Home}/>
+                        <Route component={NotFound}/>
+                    </Switch>
+                </>
+
             ) : (
                 null
             )}

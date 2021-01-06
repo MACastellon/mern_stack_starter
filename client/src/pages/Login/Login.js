@@ -18,7 +18,9 @@ const Login = (props) => {
             password : password
         }
 
-        axios.post("http://localhost:5000/users/login",formData)
+        console.log(formData)
+
+        axios.post("http://localhost:5000/users/login",formData,)
             .then(async (res) => {
                 if (res.data.success) {
                      await login(res.data.token);
@@ -37,11 +39,11 @@ const Login = (props) => {
             <h2>Login page</h2>
             <form action="POST" onSubmit={(e) => submitHandler(e)}>
                 <div>
-                    <label htmlFor="">Email</label>
+                    <label>Email</label>
                     <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}/>
                 </div>
                 <div>
-                    <label htmlFor="">Password</label>
+                    <label>Password</label>
                     <input name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}/>
                 </div>
                 <input type="submit"/>
