@@ -12,7 +12,7 @@ I wanted to create a basic starter template to speed up my developement of a ful
 ## Includes:
 - Users features : register , login , email verification, forgot password.
 - Private route and Redirected route system on the front end.
-- Global State for User using the Context API
+- Global State for User using the Context API (A branch using redux is also planned)
 
 ## Server dependencies: 
 - bcrypt
