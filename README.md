@@ -30,6 +30,6 @@ I wanted to create a basic starter template to speed up my developement of a ful
 
 ## To do:
 - Clean up and simplify the code
-
+- Adding refresh_token
 
 
